@@ -1146,6 +1146,8 @@ const (
 	// Any idle transaction will be killed after being idle for `tidb_idle_transaction_timeout` seconds.
 	// This is similar to https://docs.percona.com/percona-server/5.7/management/innodb_kill_idle_trx.html and https://mariadb.com/kb/en/transaction-timeouts/
 	TiDBIdleTransactionTimeout = "tidb_idle_transaction_timeout"
+	// TiDBLowResolutionTSOUpdateInterval defines how often to refresh low resolution timestamps.
+	TiDBLowResolutionTSOUpdateInterval = "tidb_low_resolution_tso_update_interval"
 )
 
 // TiDB intentional limits
@@ -1467,6 +1469,7 @@ const (
 	DefTiDBSchemaVersionCacheLimit                    = 16
 	DefTiDBIdleTransactionTimeout                     = 0
 	DefTiDBTxnEntrySizeLimit                          = 0
+	DefTiDBLowResolutionTSOUpdateInterval             = 2000
 )
 
 // Process global variables.
@@ -1524,7 +1527,8 @@ var (
 	EnableForeignKey    = atomic.NewBool(true)
 	EnableRCReadCheckTS = atomic.NewBool(false)
 	// EnableRowLevelChecksum indicates whether to append checksum to row values.
-	EnableRowLevelChecksum = atomic.NewBool(DefTiDBEnableRowLevelChecksum)
+	EnableRowLevelChecksum  = atomic.NewBool(DefTiDBEnableRowLevelChecksum)
+	LowResTSOUpdateInterval = atomic.NewUint32(DefTiDBLowResolutionTSOUpdateInterval)
 
 	// DefTiDBServerMemoryLimit indicates the default value of TiDBServerMemoryLimit(TotalMem * 80%).
 	// It should be a const and shouldn't be modified after tidb is started.
@@ -1597,6 +1601,8 @@ var (
 	SetGlobalResourceControl atomic.Pointer[func(bool)]
 	// ValidateCloudStorageURI validates the cloud storage URI.
 	ValidateCloudStorageURI func(ctx context.Context, uri string) error
+	// SetLowResTSOUpdateInterval is the func that applies the setting LowResTSOUpdateInterval
+	SetLowResTSOUpdateInterval func() error = nil
 )
 
 // Hooks functions for Cluster Resource Control.
